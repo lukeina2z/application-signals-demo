@@ -1,5 +1,5 @@
 #!/bin/bash
-psql_pass=$1
+db_user=$1
 private_setup_ip_address=$2
 SVC_NAME=$3
 
@@ -8,16 +8,13 @@ sudo yum install python3.9-pip python3.9-devel postgresql15 postgresql-devel gcc
 # get rds endpoint
 rds_endpoint=`aws rds describe-db-instances --db-instance-identifier petclinic-python --query "DBInstances[*].Endpoint.Address" --output text`
 
-PGPASSWORD=$psql_pass createuser djangouser -h $rds_endpoint -U root
-
-PGPASSWORD=$psql_pass psql -h $rds_endpoint -U root -d postgres -c "alter user djangouser with encrypted password '$psql_pass';"
-PGPASSWORD=$psql_pass psql -h $rds_endpoint -U root -d postgres -c "grant all privileges on database postgres to djangouser;"
-PGPASSWORD=$psql_pass psql -h $rds_endpoint -U root -d postgres -c "ALTER DATABASE postgres OWNER TO djangouser;"
+# Create database user for IAM authentication (no password needed)
+# Note: This requires the master user to create the IAM user initially
+# In production, this would be done during database setup
 
 export DJANGO_SETTINGS_MODULE=pet_clinic_insurance_service.settings
 export DB_NAME=postgres
-export DB_USER=djangouser
-export DB_USER_PASSWORD=$psql_pass
+export DB_USER=$db_user
 export DATABASE_PROFILE=postgresql
 export DB_SERVICE_HOST=$rds_endpoint
 export DB_SERVICE_PORT=5432

@@ -29,8 +29,6 @@ spec:
         - env:
             - name: POSTGRES_DB
               value: postgres
-            - name: POSTGRES_PASSWORD
-              value: asdfqwer
             - name: POSTGRES_USER
               value: djangouser
           image: postgres:14.0

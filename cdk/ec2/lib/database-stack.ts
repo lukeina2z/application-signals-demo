@@ -72,6 +72,8 @@ export class DatabaseStack extends cdk.Stack {
         cdk.aws_ec2.InstanceClass.T3,
         cdk.aws_ec2.InstanceSize.MICRO,
       ),
+      // Enable IAM database authentication
+      iamAuthentication: true,
       removalPolicy: RemovalPolicy.DESTROY,
       deleteAutomatedBackups: true,
       deletionProtection: false,

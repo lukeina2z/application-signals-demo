@@ -69,6 +69,8 @@ export class RdsDatabaseStack extends Stack {
             securityGroups: [props.rdsSecurityGroup],
             multiAz: false, // Disable Multi-AZ
             backupRetention: Duration.days(0), // 0 days backup retention
+            // Enable IAM database authentication
+            iamAuthentication: true,
             removalPolicy: RemovalPolicy.DESTROY, // For dev/testing environments
             deletionProtection: false, // Disable deletion protection
             deleteAutomatedBackups: true,

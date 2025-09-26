@@ -1,5 +1,5 @@
 #!/bin/bash
-psql_pass=$1
+db_user=$1
 private_setup_ip_address=$2
 SVC_NAME=$3
 
@@ -11,8 +11,7 @@ rds_endpoint=`echo $rds_endpoint | cut -d "\"" -f2 | cut -d "\"" -f1`
 
 export DJANGO_SETTINGS_MODULE=pet_clinic_billing_service.settings
 export DB_NAME=postgres
-export DB_USER=djangouser
-export DB_USER_PASSWORD=$psql_pass
+export DB_USER=$db_user
 export DATABASE_PROFILE=postgresql
 export DB_SERVICE_HOST=$rds_endpoint
 export DB_SERVICE_PORT=5432

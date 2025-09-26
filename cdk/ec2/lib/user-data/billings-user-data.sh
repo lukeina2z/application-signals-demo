@@ -121,9 +121,7 @@ TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-meta
 REGION=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/placement/region")
 DB_SECRET=$(aws secretsmanager get-secret-value --secret-id PetClinicDBCredentials --region $REGION --query 'SecretString' --output text)
 DB_USERNAME=$(echo "$DB_SECRET" | jq -r '.username')
-DB_PASSWORD=$(echo "$DB_SECRET" | jq -r '.password')
 echo "db username: $DB_USERNAME"
-echo "db password: $DB_PASSWORD"
 
 service_name="billing-service-ec2-python"
 
@@ -132,5 +130,5 @@ tmux start-server
 sleep 10
 tmux new-session -s billing -d
 tmux send-keys -t billing "cd /home/ec2-user/application-signals-demo/pet_clinic_billing_service" C-m
-tmux send-keys -t billing "./ec2-setup.sh $DB_PASSWORD setup.demo.local $service_name" C-m
+tmux send-keys -t billing "./ec2-setup.sh $DB_USERNAME setup.demo.local $service_name" C-m
 EOF

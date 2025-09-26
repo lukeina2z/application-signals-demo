@@ -615,7 +615,6 @@ export class EcsClusterStack extends Stack {
             essential: true,
             secrets: {
                 DB_USER: EcsSecret.fromSecretsManager(this.dbSecret, 'username'),
-                DB_USER_PASSWORD: EcsSecret.fromSecretsManager(this.dbSecret, 'password'),
             },
             environment: {
                 PYTHONPATH:
