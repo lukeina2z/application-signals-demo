@@ -92,31 +92,39 @@ LOGGING = {
     },
 }
 
-# Get secret name and region from environment or use defaults
-SECRET_NAME = os.environ.get('SECRET_NAME', 'petclinic-python-dbsecret')
+# Get region from environment or use default
 REGION = os.environ.get('REGION', 'us-east-1')
 
-def get_secret_value(secret_name: str, region_name: str) -> str:
+def get_rds_auth_token(db_host: str, db_port: int, db_user: str, region_name: str) -> str:
     """
-    Retrieve a secret string from AWS Secrets Manager.
+    Generate an IAM authentication token for RDS.
     """
-    client = boto3.client('secretsmanager', region_name=region_name)
-    response = client.get_secret_value(SecretId=secret_name)
-    return response['SecretString'] 
+    client = boto3.client('rds', region_name=region_name)
+    return client.generate_db_auth_token(
+        DBHostname=db_host,
+        Port=db_port,
+        DBUsername=db_user,
+        Region=region_name
+    )
 
+# Use IAM authentication token instead of password
+DB_HOST = os.environ.get("DB_SERVICE_HOST")
+DB_PORT = int(os.environ.get("DB_SERVICE_PORT", "5432"))
+DB_USER = os.environ.get('DB_USER', 'postgres')
 
+# Generate IAM auth token if using RDS IAM authentication
 env_db_password = os.environ.get('DB_USER_PASSWORD')
-
 if env_db_password:
     DB_PASSWORD = env_db_password
-else:
-    # Retrieve from Secrets Manager
+elif DB_HOST and os.environ.get('DATABASE_PROFILE') == 'postgresql':
     try:
-        DB_PASSWORD = get_secret_value(SECRET_NAME, REGION)
-        print(f"Retrieved secret '{SECRET_NAME}' from AWS Secrets Manager {DB_PASSWORD}")
+        DB_PASSWORD = get_rds_auth_token(DB_HOST, DB_PORT, DB_USER, REGION)
+        print(f"Generated IAM auth token for RDS connection")
     except Exception as e:
-        # Print the error
-        print(f"Error retrieving secret '{SECRET_NAME}' from AWS Secrets Manager: {e}", file=sys.stderr)
+        print(f"Error generating IAM auth token: {e}", file=sys.stderr)
+        DB_PASSWORD = None
+else:
+    DB_PASSWORD = None
 
 
 # Database
@@ -130,10 +138,13 @@ DATABASES = {
     "postgresql":{
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get('DB_NAME'),
-        "USER": os.environ.get('DB_USER'),
+        "USER": DB_USER,
         "PASSWORD": DB_PASSWORD,
-        "HOST": os.environ.get("DB_SERVICE_HOST"),
-        "PORT": os.environ.get("DB_SERVICE_PORT"),
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {
+            "sslmode": "require",
+        } if os.environ.get('DATABASE_PROFILE') == 'postgresql' and not env_db_password else {},
     }
 }
 
